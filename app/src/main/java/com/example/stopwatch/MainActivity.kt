@@ -14,6 +14,8 @@ class MainActivity : AppCompatActivity() {
     companion object{
         //all your static constants go here
         val TAG = "MainActivity"
+        val STATE_TIME = "lol"
+        val WORKS = "works"
 
     }
     private lateinit var chronometer: Chronometer
@@ -22,16 +24,46 @@ class MainActivity : AppCompatActivity() {
     private lateinit var constraint: ConstraintLayout
     private var working = false
     private var timeStopped = 0
+    var isRunning = true
+    var displayTime = 0L
+    // Use this to preserve state through orientation changes
+    override fun onSaveInstanceState(outState: Bundle) {
+        // calculate the display time if currently running
+        if(isRunning) {
+            displayTime = SystemClock.elapsedRealtime() - chronometer.base
+        }
+        // save key-value pairs to the bundle before the superclass call
+        outState.putLong(STATE_TIME, displayTime)
+        outState.putBoolean(WORKS, isRunning)
 
-
+        super.onSaveInstanceState(outState)
+    }
+    //use this to preserve state through orientation changes
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.d(TAG, "onCreate: ")
-        wireWidgets()
+
+
+             wireWidgets()
+            // restore instance state if it exists
+             if(savedInstanceState != null) {
+                 displayTime = savedInstanceState.getLong(STATE_TIME)
+                 chronometer.base = SystemClock.elapsedRealtime() - displayTime
+                 isRunning = savedInstanceState.getBoolean(WORKS)
+                 if(isRunning){
+                     chronometer.start()
+                 }
 
 
 
+
+
+                    }
+
+
+
+        
         startAndStop.setOnClickListener{
             Log.d(TAG, "onCreate: button clicked")
             if(!working) {
@@ -48,9 +80,10 @@ class MainActivity : AppCompatActivity() {
                 timeStopped = (chronometer.base - SystemClock.elapsedRealtime()).toInt()
             }
             reset.setOnClickListener {
-                chronometer.base = SystemClock.elapsedRealtime()
+                  chronometer.base = SystemClock.elapsedRealtime()
                 chronometer.stop()
                 startAndStop.setText("Start")
+
 
             }
         }
@@ -86,6 +119,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+
 
         Log.d(TAG, "onDestroy: ")
     }
